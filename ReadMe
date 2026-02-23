@@ -1,5 +1,372 @@
-This is the Master thesis project of Leslie Resch. 
-Title: 
-Submitted on the...
-Aim of project
-Explanation of files and sub-files (please explain each column of data files)
+README
+Leslie Resch
+2026-02-20
+#Granger Causality Analysis of Insect Abundance Trends in Germany
+#The Effect of Soil, Vegetation, Weather, and Landscape Variables on Insect Time Series
+##Project Description
+This project performs Granger Causality analysis to investigate potential effects of landscape, soil, weather, vegetation, and agricultural data on insect abundance trends.
+
+There are 7 types of input datasets
+
+*BExIS Insect Abundance Data for Grasslands1 and Forests2
+
+*Annual weighted mean Crop Yield and Area (German Yield Data)3
+
+*Annual Crop-specific Fertilizer Application Rates (Fertilizer Maps)4
+
+*Annual Landscape Structure Metrics (“Germany Mosaic”) (Germany Mosaic)5
+
+*Monthly Soil Moisture Index (SMI) (German Drought Monitor)6
+
+*Monthly Remote Sensing Indicators (NDVI, NDMI, NIRv) (USGS Landsat7 - GEE)7
+
+*Monthly Weather and Soil Temperature Data (BExIS Climate Data)8
+
+Data were pre-processed by aggregating or clipping to match the extent of the Biodiversity Exploratories, where the insect data was sampled. There are three Biodiversity Exploratory sites, Schwäbische Alb (ALB), Hainich-Dün (HAI) and Schorfheide-Chorin (SCH). Granger causality tests were applied at monthly and yearly resolutions, after checking stationarity using ADF and KPSS tests. Non-stationary series were detrended and/or differenced before testing. If statistically processed data were made stationary, they were put together with orignally stationary data, and then a second round of Granger Causality Testing was applied. As a final step, a sensitivity analysis was applied by visual analysis.
+
+##Repositories
+The input data and output tables and plots of the analysis are available at the OSF Repository. The R scripts are available at the GitHub Repository.
+
+##Structure of input data
+The input datasets are to be found in the data folder:
+
+data/
+├── crops/
+│   ├── merged_ALB_filled.csv
+│   ├── merged_HAI_filled.csv
+│   └── merged_SCH_filled.csv
+├── insects/
+│   ├── ds21969_filtered.csv
+│   └── ds22007.csv
+├── NDMI/
+│   ├── Landsat7_Monthly_NDMI_ALB_merged.csv
+│   ├── Landsat7_Monthly_NDMI_HAI_merged.csv
+│   └── Landsat7_Monthly_NDMI_SCH_merged.csv
+├── NDVI/
+│   ├── Landsat7_Monthly_NDVI_ALB_merged.csv
+│   ├── Landsat7_Monthly_NDVI_HAI_merged.csv
+│   └── Landsat7_Monthly_NDVI_SCH_merged.csv
+├── NIRv/
+│   ├── Landsat7_Monthly_NIRv_ALB_merged.csv
+│   ├── Landsat7_Monthly_NIRv_HAI_merged.csv
+│   └── Landsat7_Monthly_NIRv_SCH_merged.csv
+├── smi/
+│   ├── smi_means_total_soil.csv
+│   └── smi_means_upsoil.csv
+├── bexis_weather_plots.csv
+├── fertilizer_cropland_means.csv 
+├── mosaic_zones_means.csv 
+
+#Description of the input datasets
+##Crop Types (data/crops/merged_*.csv)
+###‘crops’ - Annual weighted mean Crop Yield and Area
+
+Description: Germany-wide, annual crop dataset (1979–2021) with 11 crop types: spring barley, winter barley, grain maize, silage maize, oats, potatoes, winter rapeseed, rye, sugar beet, triticale, winter wheat.
+Columns: of ‘Final_data.csv’, used for the preprocessing: Year, Crop, Area [ha], Yield [t/ha]
+Spatial resolution: NUTS-3 districts (~900 km² on average)
+Preprocessing:
+Mapped each exploratory to corresponding NUTS-3 regions
+Computed weighted crop area and yield per region using CORINE-derived weights
+Pivoted data so that Area and Yield are separate columns
+Filled missing years to create continuous time series using CORINE base years (2006, 2012, 2018)
+Overview and explanations of the column names of the files merged_*.csv:
+Column Name	Description
+year	Year of observation
+var	Crop type or category (e.g., wheat, barley, district)
+measure	Type of measurement: ‘yield’ [t/ha] or ‘area’ [ha]
+weighted_value_sum	Weighted value of the measurement per region/crop
+###Insects
+Preprocessing:
+Dataset with ID 21969 (Grasslands) was filtered with corresponding dataset ds26008, as recommended by the responsibles of Biodiversity Exploratories.
+Dataset with ID 22007 (Forests) without further preprocessing
+Overview and explanations of the column names of ds21969_filtered.csv (according to Weisser et. al ((2025)):
+Column Name	Description	DataType
+TrapID	ID including Plot, Trap type, Month and Year	string
+Exploratory	Exploratory	string
+PlotID	ID of experimental plot (HEG, SEG, AEG, 1–50 each)	string
+Traptype	Trap specification (KEF = Sweep net, 60 double-sweeps/plot)	string
+CollectionMonth	Sampling month	string
+CollectionYear	Sampling year	date-yyyy
+VIP_EP	VIP or Ep	string
+Order	Taxonomic order of each species	string
+Suborder	Taxonomic suborder of each species	string
+Family	Taxonomic family of each species	string
+Species	Species name according to Fauna Europaea	string
+NumberAdults	Number of adult individuals per species (NA = missing data)	integer
+Overview and explanations of the column names of ds22007.csv:
+VariableName	Description	DataType
+TrapID_run	ID including Plot, Subplot, Trap type, CollectionRun and Year	string
+Exploratory	Exploratory (ALB, HAI, SCH)	string
+PlotID	ID of experimental plot (HEW, SEW, AEW, 1–50 each)	string
+Traptype	Trap specification (FFB = cross-window trap, 60×40 cm, top and bottom jar, 150 cm height)	string
+CollectionRun	One of six sampling events (A–F) between April and October	string
+CollectionYear	Sampling year	date-yyyy
+VIP_EP	VIP indicator	string
+Priority	Indicator of analysed trap per plot and month (randomly selected traps)	double
+Order	Taxonomic order of each species	string
+Suborder	Taxonomic suborder of each species	string
+Family	Taxonomic family of each species	string
+Species	Species name according to Fauna Europaea	string
+NumberAdults	Number of adult individuals per species (NA = missing data)	integer
+###Vegetation-based Remote Sensing Indices (data/NDVI/, data/NDMI/, data/NIRv/)
+Remote sensing indices were calculated from Landsat 7 Level 2 (Collection 2, Tier 1) imagery (2008–2019) using the Google Earth Engine (GEE) JavaScript API.
+
+Spatial resolution: 30 m
+Temporal resolution: 16 days
+Processing steps:
+Uploaded BE borders as feature collections
+Cloud masking using the QA_PIXEL band
+Vegetation mask applied (NDVI ≥ 0.2)
+Monthly mean index values calculated per region
+Only valid pixels included in the mean
+If no valid pixels: value set to -9999
+NIRv scaled by 1/10,000
+Overview and explanations of the column names of ‘Landsat7_Monthly_NDMI_ALB_merged.csv’:
+(NDMI, NDVI, NIRv have an analogous structure)
+
+Column Name	Description	Data Type
+system:index	Internal index generated by Google Earth Engine	integer
+mean_NDMI	Monthly mean NDMI value per region (valid pixels only)	float
+month	Month of observation (1–12)	integer
+region	Exploratory region (ALB, HAI, SCH)	string
+year	Year of observation	integer
+.geo	Geometry metadata from GEE export (not used in analysis)	string
+Crop Types (data/smi/smi_means_*.csv)
+Source: UFZ Drought Monitor Germany (1951–present)
+Based on a meso-scale hydrological model mHM
+Provides monthly total soil (0–180 cm) and topsoil (0–25 cm) SMI values
+Values range from 0 to 1, representing percentile-based soil moisture relative to historical distribution
+Preprocessing Steps:
+Converted netCDF to data frame using R (terra package)
+Clipped dataset to BE extent using Python (rioxarray)
+Extracted coordinates and time information
+Aggregated monthly values per region (ALB, HAI, SCH) for analysis
+Overview and explanations of Soil Moisture Index (SMI) Dataset (data/smi/merged_*.csv):
+Column Name	Description	Data Type
+time	Date of observation (format: YYYY-MM-DD)	date
+ALB	SMI value for ALB region	float
+HAI	SMI value for HAI region	float
+SCH	SMI value for SCH region	float
+###Weather
+This dataset contains monthly weather and soil measurements per plot and region.
+
+Overview and explanations of the column names of ‘bexis_weather_plots.csv’ (according to Wöllauer et al. (2021)):
+Column Name	Description	Data Type
+plotID	Experimental plot identifier (e.g., AEG03)	string
+datetime	Date of measurement (YYYY-MM-DD)	date
+precipitation_radolan	Total monthly precipitation (mm)	float
+precipitation_radolan_rain_days	Number of days with rainfall	integer
+rH_200	Relative humidity at 200 cm	float
+rH_200_max	Maximum relative humidity at 200 cm	float
+rH_200_min	Minimum relative humidity at 200 cm	float
+SM_10	Soil moisture at 10 cm depth	float
+SM_20	Soil moisture at 20 cm depth	float
+Ta_10	Air temperature at 10 cm depth	float
+Ta_10_max	Maximum air temperature at 10 cm	float
+Ta_10_min	Minimum air temperature at 10 cm	float
+Ta_200	Air temperature at 200 cm	float
+Ta_200_max	Maximum air temperature at 200 cm	float
+Ta_200_min	Minimum air temperature at 200 cm	float
+Ts_05	Soil temperature at 5 cm depth	float
+Ts_05_max	Maximum soil temperature at 5 cm	float
+Ts_05_min	Minimum soil temperature at 5 cm	float
+Ts_10	Soil temperature at 10 cm depth	float
+Ts_10_max	Maximum soil temperature at 10 cm	float
+Ts_10_min	Minimum soil temperature at 10 cm	float
+Ts_20	Soil temperature at 20 cm depth	float
+Ts_20_max	Maximum soil temperature at 20 cm	float
+Ts_20_min	Minimum soil temperature at 20 cm	float
+Ts_50	Soil temperature at 50 cm depth	float
+Ts_50_max	Maximum soil temperature at 50 cm	float
+Ts_50_min	Minimum soil temperature at 50 cm	float
+year	Year of observation	integer
+month	Month of observation	integer
+region	Exploratory region (ALB, HAI, SCH)	string
+Notes:
+- Missing values are marked as NA.
+- Measurements cover air and soil temperature, relative humidity, soil moisture, and precipitation.
+- Used as environmental predictors in Granger causality analyses.
+
+###Fertilization (fertilizer_cropland_means.csv)
+This dataset contains annual fertilizer application rates [kg/ha] for main crop types and nutrients in the study regions.
+
+Preprocessing Steps:
+1. Cropping: Raster files cropped to the extent of each exploratory shapefile.
+2. Aggregation: Mean raster value calculated per year, crop type, fertilizer, and region.
+
+Overview and explanations of the column names of ‘fertilizer_cropland_means.csv’:
+Column Name	Description	Data Type
+Year	Year of observation	integer
+Croptype	Crop type (e.g., Fiber crops, Maize, Wheat, etc.)	string
+Fertilizer	Nutrient type (N, K2O, P2O5)	string
+ALB	Fertilizer amount in kg/ha for ALB region	float
+HAI	Fertilizer amount in kg/ha for HAI region	float
+SCH	Fertilizer amount in kg/ha for SCH region	float
+Germany Mosaic (mosaic_zones_means.csv)
+This dataset provides annual landscape metrics for each study region, derived from Germany-wide satellite data (1984–2023). Largely homogeneous image areas (“zones”) are delineated as polygons, and four structural metrics are calculated per region and year.
+
+Preprocessing Steps:
+1. Data acquisition: Germany Mosaic data cube (1984–2023) downloaded with raster and vector products from Landsat platforms 4, 5, 8, 9.
+2. Clipping: Zones clipped to the extent of each exploratory 3. Area-weighted aggregation: Annual mean values per region
+
+Overview and explanations of the column names of ‘mosaic_zones_means.csv’ according to Selsam et al. (2025):
+Column Name	Description	Data Type
+region	Study region (ALB, HAI, SCH)	string
+year	Year of observation	integer
+cellsize	Size of the zone (ha); indicates spatial extent of homogeneous areas	float
+dendrites	Perimeter-to-area ratio; measure of shape complexity of a zone	float
+normal	Normalized density of zone structure; indicates structural organization	float
+relation	Quotient of neighbors to perimeter; measure of connectivity within a zone	float
+Structure of R-script folders for Granger Causality analysis workflow:
+stationarity_detrend_scripts/
+├── ADF_KPSS_test.R
+│ └─ Description: Performs stationarity tests on all datasets (monthly and yearly resolution), recommends transformations
+│ **OUTPUT:** -> tables/stationarity_test – CSV tables with test results per dataset 
+├── detrending_monthly.R
+│ └─ Description: Detrending and/or differencing for monthly data, performs stationarity tests on detrended and or differenced data, recommends transformations
+│ **OUTPUT:** -> tables/detrend_diff_stationarity
+└── detrending_yearly.R
+└─ Description: Detrending and/or differencing for yearly data, performs stationarity tests on detrended and or differenced data, recommends transformations 
+  **OUTPUT:** -> tables/detrend_diff_stationarity 
+
+granger_causality_monthly/
+├── granger_causality_monthly.R
+│ ├─ Description: Tests Granger causality (monthly) for all originally stationary time series, tested in 'ADF_KPSS_test'
+│ ├─ **INPUT:**
+│ │ - tables/stationarity_test/combined_stationarity_ds21969_ALB_HAI_monthly.csv
+│ │ - tables/stationarity_test/combined_stationarity_ds21969_SCH_monthly.csv
+│ │ - tables/stationarity_test/combined_stationarity_ds22007_monthly.csv
+│ └─ **OUTPUT:** -> tables/granger_test/ – CSV tables with Granger causality test results for all family x environmental combinations.
+
+├── 2nd_granger_ds21969_monthly.R
+│ ├─ Description: Tests Granger causality for grassland plots (ds21969)in monthly resolution with originally stationary data + data that derived stationarity through detrending and/or differencing.
+│ ├─ **INPUT:**
+│ │ - tables/stationarity_test/combined_stationarity_ds21969_ALB_HAI_monthly.csv
+│ │ - tables/stationarity_test/combined_stationarity_ds21969_SCH_monthly.csv
+│ │ - tables/detrend_diff_stationarity/stationarity_table_ds21969_detrended_monthly.csv
+│ │ - tables/detrend_diff_stationarity/stationarity_table_ds21969_diff_monthly.csv
+│ │ - tables/detrend_diff_stationarity/stationarity_table_ds21969_both_monthly.csv
+│ └─ **OUTPUT:** -> tables/granger_test/ – CSV results for grassland plots.
+
+├── 2nd_granger_ds22007_monthly.R
+│ ├─ Description: Tests Granger causality for forest plots (ds22007)in monthly resolution with originally stationary data + data that derived stationarity through detrending and/or differencing.
+│ ├─ **INPUT:**
+│ │ - tables/stationarity_test/combined_stationarity_ds22007_monthly.csv
+│ │ - tables/detrend_diff_stationarity/stationarity_table_ds22007_detrended_monthly.csv
+│ │ - tables/detrend_diff_stationarity/stationarity_table_ds22007_diff_monthly.csv
+│ │ - tables/detrend_diff_stationarity/stationarity_table_ds22007_both_monthly.csv
+│ └─ **OUTPUT:** -> tables/granger_test/ – CSV results for forest plots.
+
+granger_causality_yearly/
+├── granger_causality_yearly.R
+│ ├─ Description: Tests Granger causality (yearly) for all originally stationary time series, tested in 'ADF_KPSS_test'.
+│ ├─ **INPUT*:*
+│ │ - tables/stationarity_test/combined_stationarity_ds21969_yearly.csv
+│ │ - tables/stationarity_test/combined_stationarity_ds22007_yearly.csv
+│ └─ **OUTPUT:** -> tables/granger_test/ – CSV tables with Granger causality test results for all family x environmental combinations.
+
+├── 2nd_granger_ds21969_yearly.R
+│ ├─ Description: Tests Granger causality for grassland plots (ds21969) in yearly resolution with originally stationary data + data derived through detrending and/or differencing.
+│ ├─ **INPUT:**
+│ │ - tables/stationarity_test/combined_stationarity_ds21969_yearly.csv
+│ │ - tables/detrend_diff_stationarity/stationarity_table_ds21969_detrended_yearly.csv
+│ │ - tables/detrend_diff_stationarity/stationarity_table_ds21969_diff_yearly.csv
+│ │ - tables/detrend_diff_stationarity/stationarity_table_ds21969_both_yearly.csv
+│ └─ **OUTPUT:** -> tables/granger_test/ – CSV results for grassland plots.
+
+└── 2nd_granger_ds22007_yearly.R
+├─ Description: Tests Granger causality for forest plots (ds22007) in yearly resolution with originally stationary data + data derived through detrending and/or differencing.
+├─ **INPUT:**
+│ - tables/stationarity_test/combined_stationarity_ds22007_yearly.csv
+│ - tables/detrend_diff_stationarity/stationarity_table_ds22007_detrended_yearly.csv
+│ - tables/detrend_diff_stationarity/stationarity_table_ds22007_diff_yearly.csv
+│ - tables/detrend_diff_stationarity/stationarity_table_ds22007_both_yearly.csv
+└─ **OUTPUT:** -> tables/granger_test/ – CSV results for forest plots.
+
+plot_scripts/
+├── data_description.R
+│ ├─ Description: Creates species- and order-based bar plots, interactive line graphs per location and year, and generates LaTeX-compatible tables for order, family, and species.
+│ └─ **OUTPUT:** -> plots/interactive_insect_plots/ – PNGs and interactive HTML plots
+
+├── facetplots_time-series.R
+│ ├─ Description: Creates faceted annual trends for insect abundance combined with all environmental variables per region (ALB, HAI, SCH). Units are harmonized across variables for comparability.
+│ └─ **OUTPUT:** -> plots/facetplots/ – A4-sized PNGs
+
+├── fertilization_linear_regression.R
+│ ├─ Description: Creates log-linear regression plots for insect family abundance (grassland and forest) with at least one Granger causal result and fertilization data. Calculates annual growth rates, visualizes trends by trophic group or croptype (at least one value > 0.5 kg/ha) over 2008–2019.
+│ └─ **OUTPUT:** -> plots/linear_regression/ – PNGs
+
+├── insect_family_species_heatmap_rt.R
+│ ├─ Description: Calculates intrinsic growth rate ($r_t$) of insect populations at family and species level for grasslands and forests. Builds heat maps of annual growth rates over intervals.
+│ └─ **OUTPUT:** -> plots/heatmaps_rt/ – PNG files for families and species
+
+├── plots_granger_results.R
+│ ├─ Description: Prepares Granger causality test results for grassland and forest plots.Aggregates results, and creates color-coded heat maps for annual and monthly resolutions per region, chooses lag with highest F-value to be displayed in heatmap.
+│ └─ **OUTPUT:** -> plots/granger_results/ – heat maps PNGs
+
+└── sensitivity_analysis.R
+├─ Description: Analyzes sensitivity of Granger causality results across lags, temporal resolutions (yearly vs. monthly), and preprocessing methods (Original, Detrended, Differenced) for two datasets and multiple regions.
+└─ **OUTPUT:** -> plots/sensitivity_analysis/ – Summary plots of causal proportions
+Structure of OUTPUT tables:
+tables/stationarity_test/combined_stationarity_*_*.csv:
+also analogous to tables in tables/detrend_diff_stationarity -
+Column Name	Description
+statistic_adf	Test statistic from the Augmented Dickey-Fuller (ADF) test, which checks for unit roots (non-stationarity).
+p_value_adf	p-value corresponding to the ADF test statistic. Low p-values (<0.05) indicate rejection of the null hypothesis of non-stationarity.
+status_adf	Interpretation of ADF result (stationary or non-stationary).
+Croptype	Crop type (if applicable for crop-related datasets; NA for environmental indices like SMI).
+Fertilizer	Fertilizer type (if applicable; NA for datasets not related to fertilization).
+region	Geographical region of the dataset (if applicable).
+var	Name of the environmental variable being tested (e.g., NDVI, NDMI, NIRv; NA if not applicable).
+measure	Type of measurement for the variable (e.g., yield, area; NA if not applicable).
+Exploratory	Specific exploratory site (e.g., ALB, HAI, SCH; often redundant with variable).
+Family	Insect family (if applicable; NA for environmental or soil datasets).
+statistic_kpss	Test statistic from the KPSS (Kwiatkowski-Phillips-Schmidt-Shin) test, which tests for trend stationarity.
+p_value_kpss	p-value corresponding to the KPSS test statistic. Low p-values (<0.05) indicate rejection of the null hypothesis of stationarity.
+status_kpss	Interpretation of KPSS result (stationary or non-stationary).
+recommended_action	Recommended preprocessing to achieve stationarity based on the combined ADF and KPSS results. Possible categories:
+• Apply differencing: ADF = stationary & KPSS = non-stationary
+• Detrend: ADF = non-stationary & KPSS = stationary
+• No transformation required: ADF = stationary & KPSS = stationary
+• Detrend and then difference: ADF = non-stationary & KPSS = non-stationary
+• Indeterminate: any other combination.
+###Granger Causality Output Columns, e.g., granger_test/results_ds22007_SCH_2nd_round.csv:
+Column Name	Description
+Family	Insect family tested for causal relationships.
+EnvDataset	Environmental dataset used as predictor (e.g., SMI_total, NDVI, NDMI, NIRv).
+EnvColumn	Specific variable/column from the environmental dataset (e.g., HAI, ALB, SCH).
+Croptype	Crop type if applicable (NA for datasets not related to crops).
+Fertilizer	Fertilizer type if applicable (NA for datasets not related to fertilization).
+Lag	Time lag tested in the Granger causality test (e.g., 1, 2, 3 months or years).
+F_stat	F-statistic from the Granger causality test. NA if test could not be performed.
+p_value	p-value corresponding to the F-statistic. NA if test could not be performed.
+causality	Outcome of the test:
+• causal – Granger causality detected (p < 0.05)
+• non-causal – No Granger causality detected (p ≥ 0.05)
+• no_test – Test could not be performed, e.g., due to insufficient data or missing values.
+###Comments:
+Note, that the scripts and the results of the 2nd of Granger Tests are complete without the ones from the 1st round of Granger Tests. The latter are rather a result of “work in progress”.
+
+The folder structure I have used are mirrored in the Repositories:
+
+./
+├── data/
+├── plots/
+├── scripts/
+├── tables/
+Dataset sources:
+Weisser, W. W., Goßner, M., Pasalic, E., Lange, M., Türke, M., Gallenberger, I., Simons, N. K., & Staab, M. (2025, July). Sweep net samples from grasslands since 2008: Araneae, Coleoptera, Hemiptera, Orthoptera. Retrieved January 11, 2026, from https://www.bexis.uni-jena.de/ddm/data/Showdata/21969↩︎
+
+Weisser, W. W., Goßner, M., Pasalic, E., Türke, M., Lange, M., & Staab, M. (2025). Window traps on forest VIPs, 2008-2022: Coleoptera and Hemiptera. Retrieved January 11, 2026, from https://www.bexis.uni- jena.de/ddm/data/Showdata/ 22007↩︎
+
+Duden, C., Nacke, C., & Offermann, F. (2024). German yield and area data for 11 crops from 1979 to 2021 at a harmonized spatial resolution of 397 districts. Scientific Data, 11(1), 95. https://doi.org/10.1038/s41597-024-02951-8↩︎
+
+Coello, F., Decorte, T., Janssens, I., Mortier, S., Sardans, J., Peñuelas, J., & Verdonck, T. (2025). Global Crop-Specific Fertilization Dataset from 1961–2019. Scientific Data, 12(1), 40. https://doi.org/10.1038/s41597-024-04215-x↩︎
+
+Selsam, P., Lausch, A., & Bumberger, J. (2025). Germany Mosaic: A 40-Year High- Resolution Remote Sensing Time Series of Germany. https://doi.org/10.1594/ PANGAEA.967266↩︎
+
+Marx, A. (2025, August). German Drought Monitor. https://www.ufz.de/index.php?en=37937↩︎
+
+USGS. (2025). USGS Landsat 7 Level 2, Collection 2, Tier 1. Retrieved January 12, 2026, from https : / / developers . google . com / earth - engine / datasets / catalog / LANDSAT_LE07_C02_T1_L2↩︎
+
+Wöllauer, S., Zeuss, D., Hänsel, F., & Nauss, T. (2021). TubeDB: An on-demand processing database system for climate station data. Computers & Geosciences, 146, 104641. https://doi.org/10.1016/j.cageo.2020.104641↩︎
