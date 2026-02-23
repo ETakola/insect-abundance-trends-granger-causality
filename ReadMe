@@ -1,33 +1,33 @@
 README
 Leslie Resch
 2026-02-20
-#Granger Causality Analysis of Insect Abundance Trends in Germany
-#The Effect of Soil, Vegetation, Weather, and Landscape Variables on Insect Time Series
-##Project Description
+# Granger Causality Analysis of Insect Abundance Trends in Germany
+# The Effect of Soil, Vegetation, Weather, and Landscape Variables on Insect Time Series
+## Project Description
 This project performs Granger Causality analysis to investigate potential effects of landscape, soil, weather, vegetation, and agricultural data on insect abundance trends.
 
 There are 7 types of input datasets
 
-*BExIS Insect Abundance Data for Grasslands1 and Forests2
+* BExIS Insect Abundance Data for Grasslands1 and Forests2
 
-*Annual weighted mean Crop Yield and Area (German Yield Data)3
+* Annual weighted mean Crop Yield and Area (German Yield Data)3
 
-*Annual Crop-specific Fertilizer Application Rates (Fertilizer Maps)4
+* Annual Crop-specific Fertilizer Application Rates (Fertilizer Maps)4
 
-*Annual Landscape Structure Metrics (“Germany Mosaic”) (Germany Mosaic)5
+* Annual Landscape Structure Metrics (“Germany Mosaic”) (Germany Mosaic)5
 
-*Monthly Soil Moisture Index (SMI) (German Drought Monitor)6
+* Monthly Soil Moisture Index (SMI) (German Drought Monitor)6
 
-*Monthly Remote Sensing Indicators (NDVI, NDMI, NIRv) (USGS Landsat7 - GEE)7
+* Monthly Remote Sensing Indicators (NDVI, NDMI, NIRv) (USGS Landsat7 - GEE)7
 
-*Monthly Weather and Soil Temperature Data (BExIS Climate Data)8
+* Monthly Weather and Soil Temperature Data (BExIS Climate Data)8
 
 Data were pre-processed by aggregating or clipping to match the extent of the Biodiversity Exploratories, where the insect data was sampled. There are three Biodiversity Exploratory sites, Schwäbische Alb (ALB), Hainich-Dün (HAI) and Schorfheide-Chorin (SCH). Granger causality tests were applied at monthly and yearly resolutions, after checking stationarity using ADF and KPSS tests. Non-stationary series were detrended and/or differenced before testing. If statistically processed data were made stationary, they were put together with orignally stationary data, and then a second round of Granger Causality Testing was applied. As a final step, a sensitivity analysis was applied by visual analysis.
 
-##Repositories
+## Repositories
 The input data and output tables and plots of the analysis are available at the OSF Repository. The R scripts are available at the GitHub Repository.
 
-##Structure of input data
+## Structure of input data
 The input datasets are to be found in the data folder:
 
 data/
@@ -57,9 +57,9 @@ data/
 ├── fertilizer_cropland_means.csv 
 ├── mosaic_zones_means.csv 
 
-#Description of the input datasets
-##Crop Types (data/crops/merged_*.csv)
-###‘crops’ - Annual weighted mean Crop Yield and Area
+# Description of the input datasets
+## Crop Types (data/crops/merged_*.csv)
+### ‘crops’ - Annual weighted mean Crop Yield and Area
 
 Description: Germany-wide, annual crop dataset (1979–2021) with 11 crop types: spring barley, winter barley, grain maize, silage maize, oats, potatoes, winter rapeseed, rye, sugar beet, triticale, winter wheat.
 Columns: of ‘Final_data.csv’, used for the preprocessing: Year, Crop, Area [ha], Yield [t/ha]
@@ -75,7 +75,7 @@ year	Year of observation
 var	Crop type or category (e.g., wheat, barley, district)
 measure	Type of measurement: ‘yield’ [t/ha] or ‘area’ [ha]
 weighted_value_sum	Weighted value of the measurement per region/crop
-###Insects
+### Insects
 Preprocessing:
 Dataset with ID 21969 (Grasslands) was filtered with corresponding dataset ds26008, as recommended by the responsibles of Biodiversity Exploratories.
 Dataset with ID 22007 (Forests) without further preprocessing
@@ -108,7 +108,7 @@ Suborder	Taxonomic suborder of each species	string
 Family	Taxonomic family of each species	string
 Species	Species name according to Fauna Europaea	string
 NumberAdults	Number of adult individuals per species (NA = missing data)	integer
-###Vegetation-based Remote Sensing Indices (data/NDVI/, data/NDMI/, data/NIRv/)
+### Vegetation-based Remote Sensing Indices (data/NDVI/, data/NDMI/, data/NIRv/)
 Remote sensing indices were calculated from Landsat 7 Level 2 (Collection 2, Tier 1) imagery (2008–2019) using the Google Earth Engine (GEE) JavaScript API.
 
 Spatial resolution: 30 m
@@ -187,7 +187,7 @@ Notes:
 - Measurements cover air and soil temperature, relative humidity, soil moisture, and precipitation.
 - Used as environmental predictors in Granger causality analyses.
 
-###Fertilization (fertilizer_cropland_means.csv)
+### Fertilization (fertilizer_cropland_means.csv)
 This dataset contains annual fertilizer application rates [kg/ha] for main crop types and nutrients in the study regions.
 
 Preprocessing Steps:
@@ -330,7 +330,7 @@ recommended_action	Recommended preprocessing to achieve stationarity based on th
 • No transformation required: ADF = stationary & KPSS = stationary
 • Detrend and then difference: ADF = non-stationary & KPSS = non-stationary
 • Indeterminate: any other combination.
-###Granger Causality Output Columns, e.g., granger_test/results_ds22007_SCH_2nd_round.csv:
+### Granger Causality Output Columns, e.g., granger_test/results_ds22007_SCH_2nd_round.csv:
 Column Name	Description
 Family	Insect family tested for causal relationships.
 EnvDataset	Environmental dataset used as predictor (e.g., SMI_total, NDVI, NDMI, NIRv).
@@ -344,7 +344,7 @@ causality	Outcome of the test:
 • causal – Granger causality detected (p < 0.05)
 • non-causal – No Granger causality detected (p ≥ 0.05)
 • no_test – Test could not be performed, e.g., due to insufficient data or missing values.
-###Comments:
+### Comments:
 Note, that the scripts and the results of the 2nd of Granger Tests are complete without the ones from the 1st round of Granger Tests. The latter are rather a result of “work in progress”.
 
 The folder structure I have used are mirrored in the Repositories:
@@ -354,7 +354,8 @@ The folder structure I have used are mirrored in the Repositories:
 ├── plots/
 ├── scripts/
 ├── tables/
-Dataset sources:
+
+#Dataset sources:
 Weisser, W. W., Goßner, M., Pasalic, E., Lange, M., Türke, M., Gallenberger, I., Simons, N. K., & Staab, M. (2025, July). Sweep net samples from grasslands since 2008: Araneae, Coleoptera, Hemiptera, Orthoptera. Retrieved January 11, 2026, from https://www.bexis.uni-jena.de/ddm/data/Showdata/21969↩︎
 
 Weisser, W. W., Goßner, M., Pasalic, E., Türke, M., Lange, M., & Staab, M. (2025). Window traps on forest VIPs, 2008-2022: Coleoptera and Hemiptera. Retrieved January 11, 2026, from https://www.bexis.uni- jena.de/ddm/data/Showdata/ 22007↩︎
